@@ -17,7 +17,7 @@ void run(motor_pos *motorPos, int start, int end, bool startCount){
             gpio_put(STPER_GP3, clockwise[i][1]);
             gpio_put(STPER_GP6, clockwise[i][2]);
             gpio_put(STPER_GP13, clockwise[i][3]);
-            sleep_ms(4);
+            sleep_ms(MOTOR_DELAY);
             motorPos->pos++;
             if(startCount){
                 motorPos->revol++;
@@ -40,7 +40,7 @@ void rerun(motor_pos *motorPos, int start, int end, bool startCount , int *extra
             gpio_put(STPER_GP3, clockwise[i][1]);
             gpio_put(STPER_GP6, clockwise[i][2]);
             gpio_put(STPER_GP13, clockwise[i][3]);
-            sleep_ms(4);
+            sleep_ms(MOTOR_DELAY);
             motorPos->pos++;
             *extra++;
             //motorPos->revol++;
@@ -54,14 +54,7 @@ void rerun(motor_pos *motorPos, int start, int end, bool startCount , int *extra
     }
     printf("REstartCount: %d\n", startCount);
 }
-/*
-void positionIt(motor_pos *motorPos){
-    bool startCount = false;
-    run(motorPos, start, 8, startCount);
-    run(motorPos, start, 8, startCount);
-    printf("Current revolution %d\n", motorPos->revol);
-}
-*/
+
 void calib(motor_pos *motorPos){
     //int start = gpio_get(GPIO_Opto);
     bool startCount = false;
@@ -69,20 +62,20 @@ void calib(motor_pos *motorPos){
     run(motorPos, 1, 8, startCount);
 
     sleep_ms(1000);
-    for (int i = 0; i < 3; i++) {
+    for (int i = 0; i < 1; i++) {
        // printf("start: %d\n", start);
         run(motorPos, 0, 8, startCount = true);
         run(motorPos, 1, 8, startCount = true);
         sleep_ms(1000);
 
     }
-    motorPos->microstep = (motorPos->revol / 3) / 8;
+    motorPos->microstep = (motorPos->revol / 1) / 8;
     printf("Calibration done\n");
-    printf("gpio_get(GPIO_Opto): %d\n", gpio_get(GPIO_Opto));
     printf("Total revolution: %d\n", motorPos->revol);
     printf("Total microstep: %d\n", motorPos->microstep);
     int startPositioning = motorPos->microstep;
     printf("startPositioning: %d\n", startPositioning);
+    printf("Current Position %d\n", motorPos->pos);
 
     //positionIt(motorPos);a
     sleep_ms(1000);
@@ -151,13 +144,13 @@ void calib(motor_pos *motorPos){
 
 
     while(gpio_get(GPIO_Opto) == 0){
-        //printf("Current Position\n");
+        printf("Current Position\n");
         for (int i = motorPos->pos; i >= 0; i--) {
             gpio_put(STPER_GP2, clockwise[i][0]);
             gpio_put(STPER_GP3, clockwise[i][1]);
             gpio_put(STPER_GP6, clockwise[i][2]);
             gpio_put(STPER_GP13, clockwise[i][3]);
-            sleep_ms(4);
+            sleep_ms(MOTOR_DELAY);
             motorPos->pos--;
             //extra++;
             if(motorPos->pos < 0){
@@ -177,6 +170,7 @@ void calib(motor_pos *motorPos){
             gpio_put(STPER_GP3, clockwise[i][1]);
             gpio_put(STPER_GP6, clockwise[i][2]);
             gpio_put(STPER_GP13, clockwise[i][3]);
+            sleep_ms(MOTOR_DELAY);
             motorPos->pos++;
             step_1++;
             if(gpio_get(GPIO_Opto) == 0){
@@ -203,7 +197,7 @@ void calib(motor_pos *motorPos){
             gpio_put(STPER_GP3, clockwise[i][1]);
             gpio_put(STPER_GP6, clockwise[i][2]);
             gpio_put(STPER_GP13, clockwise[i][3]);
-            sleep_ms(4);
+            sleep_ms(MOTOR_DELAY);
             motorPos->pos--;
             extra--;
             //extra++;
@@ -218,4 +212,90 @@ void calib(motor_pos *motorPos){
 
     //printf("Extra revolution %d\n", extra_revol);
 
+}
+
+void recalib(motor_pos *motorPos){
+    int count = 0;
+    while(gpio_get(GPIO_Opto) == 1){
+        //printf("Current Position\n");
+        for (int i = motorPos->pos; i >= 0; i--) {
+            gpio_put(STPER_GP2, clockwise[i][0]);
+            gpio_put(STPER_GP3, clockwise[i][1]);
+            gpio_put(STPER_GP6, clockwise[i][2]);
+            gpio_put(STPER_GP13, clockwise[i][3]);
+            sleep_ms(MOTOR_DELAY);
+            motorPos->pos--;
+            count++;
+            //extra++;
+            if(motorPos->pos < 0){
+                motorPos->pos = 7;
+            }
+            if(gpio_get(GPIO_Opto) == 0){
+                break;
+            }
+        }
+    }
+    printf("Current Position %d\n", motorPos->pos);
+    while(gpio_get(GPIO_Opto) == 0){
+        //printf("Current Position\n");
+        for (int i = motorPos->pos; i >= 0; i--) {
+            gpio_put(STPER_GP2, clockwise[i][0]);
+            gpio_put(STPER_GP3, clockwise[i][1]);
+            gpio_put(STPER_GP6, clockwise[i][2]);
+            gpio_put(STPER_GP13, clockwise[i][3]);
+            sleep_ms(MOTOR_DELAY);
+            motorPos->pos--;
+            //extra++;
+            if(motorPos->pos < 0){
+                motorPos->pos = 7;
+            }
+            if(gpio_get(GPIO_Opto) == 1){
+                break;
+            }
+        }
+    }
+
+    int step_1 = 0;
+    int extra = 0;
+    while (step_1 < motorPos->microstep){
+        for (int i = motorPos->pos; i < 8; i++) {
+            //printf("Current Position %d\n", motorPos->pos);
+            gpio_put(STPER_GP2, clockwise[i][0]);
+            gpio_put(STPER_GP3, clockwise[i][1]);
+            gpio_put(STPER_GP6, clockwise[i][2]);
+            gpio_put(STPER_GP13, clockwise[i][3]);
+            sleep_ms(MOTOR_DELAY);
+            motorPos->pos++;
+            step_1++;
+            if(gpio_get(GPIO_Opto) == 0){
+                extra++;
+            }
+            sleep_ms(MOTOR_DELAY);
+            if (motorPos->pos == 8) {
+                motorPos->pos = 0;
+            }
+            if (step_1 == 512) {
+                break;
+            }
+        }
+    }
+    while(extra != 0){
+        for (int i = motorPos->pos; i >= 0; i--) {
+            gpio_put(STPER_GP2, clockwise[i][0]);
+            gpio_put(STPER_GP3, clockwise[i][1]);
+            gpio_put(STPER_GP6, clockwise[i][2]);
+            gpio_put(STPER_GP13, clockwise[i][3]);
+            sleep_ms(MOTOR_DELAY);
+            motorPos->pos--;
+            extra--;
+            //extra++;
+            if(motorPos->pos < 0){
+                motorPos->pos = 7;
+            }
+            if(extra== 0){
+                break;
+            }
+        }
+    }
+    motorPos->recaliberate = true;
 }

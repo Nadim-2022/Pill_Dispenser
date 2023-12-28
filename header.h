@@ -44,6 +44,7 @@
 #define I2C0_SCL_PIN 17
 #define DEVADDR 0x50
 #define EEPROM_SIZE 32767  // Replace with your EEPROM size
+#define EEPROM_motorPos 4000
 #define LOG_ENTRY_ADD_MAX 2048  // Size of the log area in EEPROM
 #define LOG_ENTRY_SIZE 64
 
@@ -56,14 +57,17 @@
 #define UART_TX_PIN 4
 #define UART_RX_PIN 5
 
-#define DispenTime  10000000//30000000
+#define DispenTime  2000000//30000000
 #define TOGGLE_DELAY 500000
+#define MOTOR_DELAY 1 // ms
 
 typedef struct motor_position{
     int pos;
-    int revol;
+    int  revol;
     int microstep;
     int currentPillnum;
+    uint16_t address;
+    bool recaliberate;
 } motor_pos;
 
 typedef enum {
@@ -84,11 +88,6 @@ typedef struct pil_state{
     dis_state state;
 } pil_state;
 
-typedef struct ledstate {
-    uint8_t state;
-    uint8_t not_state;
-} ledstate;
-
 typedef struct log_entry {
     char message[64];
 } log_entry;
@@ -108,9 +107,12 @@ void init();
 void calib(motor_pos *motorPos);
 void run(motor_pos *motorPos, int start, int end, bool startCount);
 void calibStep(motor_pos *motorPos);
-void dispensepills(motor_pos *motorPos);
+void dispensepills(motor_pos *motorPos, log_entry *le);
 void piezoHandler(uint gpio, uint32_t events);
-void eeprom_write_bytes(uint16_t addr, uint8_t* values, uint16_t length);
+void eeprom_write_bytes(uint16_t addr, const uint8_t* values, uint16_t length);
 void eeprom_read_bytes(uint16_t addr, uint8_t* values, uint16_t length);
-
+void recalib(motor_pos *motorPos);
+void write_log(log_entry *le, uint16_t *address);
+void read_log();
+void erase_log(uint16_t address);
 
