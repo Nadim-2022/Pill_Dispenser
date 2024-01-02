@@ -52,7 +52,7 @@ void write_log(log_entry *le, uint16_t *address){
         uint8_t read_data[LOG_ENTRY_SIZE];
         if(*address < LOG_ENTRY_ADD_MAX){
             eeprom_read_bytes(*address, read_data, LOG_ENTRY_SIZE);
-            printf("addr: %d\n", *address);
+            //printf("addr: %d\n", *address);
             if(read_data[0] == 0){
                 eeprom_write_bytes(*address, data, LOG_ENTRY_SIZE);
 

@@ -48,13 +48,18 @@ int main() {
         set_boot_state(&bootState, true);
         eeprom_write_bytes(EEPROM_SIZE-1, (uint8_t*)&bootState, sizeof(boot_state));
     }
+    read_log();
+    erase_log(0);
     eeprom_read_bytes(EEPROM_motorPos-5, (uint8_t*)&motorPos, sizeof(motor_pos));
     printf("pos: %d\n", motorPos.pos);
     printf("revol: %d\n", motorPos.revol);
     printf("microstep: %d\n", motorPos.microstep);
     printf("currentPillnum: %d\n", motorPos.currentPillnum);
     printf("address: %d\n", motorPos.address);
-
+    if(motorPos.currentPillnum == 7){
+        motorPos.currentPillnum = 0;
+        printf("currentPillnum: %d\n", motorPos.currentPillnum);
+    }
     if (bootState.state && motorPos.currentPillnum > 0){
         pilState.state = DisreCalib;
     }
@@ -63,7 +68,7 @@ int main() {
     uint64_t lastToggleTime = time_us_64();
     bool ledToggle = true;
     bool calibration = false;
-    erase_log(motorPos.address);
+
     while (true){
         switch (pilState.state) {
             case DisStart:
@@ -73,6 +78,7 @@ int main() {
                 }
                 if (!gpio_get(BTN_1)) {
                     motorPos.revol = 0;
+                    motorPos.currentPillnum = 0;
                     printf("Current revolution %d\n", motorPos.revol);
                     ledToggle = false;
                     gpio_put(LED_1, 0);
@@ -101,9 +107,7 @@ int main() {
                 }
                 break;
             case DisreCalib:
-                printf("Your are here\n");
                 recalib(&motorPos);
-                printf("Your are here\n");
                 dispensepills(&motorPos, &le);
                 pilState.state = DisStart;
         }

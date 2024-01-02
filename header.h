@@ -57,9 +57,11 @@
 #define UART_TX_PIN 4
 #define UART_RX_PIN 5
 
-#define DispenTime  2000000//30000000
+#define DispenTime  5000000//30000000
 #define TOGGLE_DELAY 500000
-#define MOTOR_DELAY 1 // ms
+#define MOTOR_DELAY 2 // ms
+
+#define Calicarate_count 1
 
 typedef struct motor_position{
     int pos;
@@ -105,7 +107,8 @@ static const uint8_t clockwise[8][4] = {
 };
 void init();
 void calib(motor_pos *motorPos);
-void run(motor_pos *motorPos, int start, int end, bool startCount);
+void run(motor_pos *motorPos, int start, int end, bool startCount, bool clockwiseDirection);
+//void run(motor_pos *motorPos, int start, int end, bool startCount);
 void calibStep(motor_pos *motorPos);
 void dispensepills(motor_pos *motorPos, log_entry *le);
 void piezoHandler(uint gpio, uint32_t events);
