@@ -135,6 +135,7 @@ void recalib(motor_pos *motorPos){
             }
         }
     }
+    printf("extra: %d\n", extra);
     sleep_ms(1000);
     while(extra != 0){
         for (int i = motorPos->pos; i >= 0; i--) {
