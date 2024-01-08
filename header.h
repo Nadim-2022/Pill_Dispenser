@@ -18,6 +18,8 @@
 #include "hardware/flash.h"
 #include "hardware/structs/bus_ctrl.h"
 #include "hardware/structs/sio.h"
+#include "uart.h"
+
 
 //LED
 #define LED_1 20
@@ -49,13 +51,15 @@
 #define LOG_ENTRY_SIZE 64
 
 //UART
-#define UART_ID uart0
-#define BAUD_RATE 115200
-#define DATA_BITS 8
-#define STOP_BITS 1
-#define PARITY    UART_PARITY_NONE
+#define UART_NR 1
+#define UART_NAME uart1
 #define UART_TX_PIN 4
 #define UART_RX_PIN 5
+#define BAUD_RATE 9600
+#define loraWaiting 500000
+#define loraWaiting2 10000000
+#define msgWaiting 5000000
+#define STRLEN 256
 
 #define DispenTime  5000000//30000000
 #define TOGGLE_DELAY 500000
@@ -118,4 +122,5 @@ void recalib(motor_pos *motorPos);
 void write_log(log_entry *le, uint16_t *address);
 void read_log();
 void erase_log(uint16_t address);
-
+bool lora();
+bool loraMsg(const char *msg);
