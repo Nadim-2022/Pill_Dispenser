@@ -52,7 +52,6 @@
 
 //UART
 #define UART_NR 1
-#define UART_NAME uart1
 #define UART_TX_PIN 4
 #define UART_RX_PIN 5
 #define BAUD_RATE 9600
@@ -63,13 +62,14 @@
 
 #define DispenTime  5000000//30000000
 #define TOGGLE_DELAY 500000
+#define TOGGLE_DELAY2 250000
 #define MOTOR_DELAY 2 // ms
 
 #define Calicarate_count 1
 
 typedef struct motor_position{
     int pos;
-    int  revol;
+    int revol;
     int microstep;
     int currentPillnum;
     uint16_t address;
@@ -111,7 +111,7 @@ static const uint8_t clockwise[8][4] = {
 };
 void init();
 void calib(motor_pos *motorPos);
-void run(motor_pos *motorPos, int start, int end, bool startCount, bool clockwiseDirection);
+void run(motor_pos *motorPos, int start, bool startCount, bool clockwiseDirection);
 //void run(motor_pos *motorPos, int start, int end, bool startCount);
 void calibStep(motor_pos *motorPos);
 void dispensepills(motor_pos *motorPos, log_entry *le);
@@ -124,3 +124,12 @@ void read_log();
 void erase_log(uint16_t address);
 bool lora();
 bool loraMsg(const char *msg);
+
+typedef struct boot_state{
+    bool state;
+    bool not_state;
+} boot_state;
+
+void init_motor_pos(motor_pos *motorPos);
+void set_boot_state(boot_state *boot_state, bool state);
+bool get_boot_state(boot_state *boot_state);

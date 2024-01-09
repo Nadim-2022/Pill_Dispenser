@@ -8,18 +8,17 @@
 #include "pico/stdlib.h"
 #include "hardware/i2c.h"
 #include "header.h"
+#include "watchdog.h"
 
 
 static bool pillDroped = false;
-static uint64_t pilstart;
 typedef enum {
-    errorFound,
     startDispense,
     continueDispense,
     pillDispensed,
     pillNotDispensed
 }pillDispenseState;
-void runDispenser(motor_pos *motorPos, log_entry *le){
+void runDispenser(motor_pos *motorPos){
     int currentmicrostep = 0;
     while (currentmicrostep < motorPos->microstep){
         for (int i = motorPos->pos; i < 8; i++) {
@@ -39,8 +38,9 @@ void runDispenser(motor_pos *motorPos, log_entry *le){
         }
 
     }
+    watchdog_feed();
 }
-static void isStopedRun(motor_pos *motorPos){
+void isStopedRun(motor_pos *motorPos){
     int have_to = motorPos->microstep * motorPos->currentPillnum;
     int i = 0;
     while(i < have_to){
@@ -59,8 +59,8 @@ static void isStopedRun(motor_pos *motorPos){
                 break;
             }
         }
-
     }
+    watchdog_feed();
 }
 void dispensepills(motor_pos *motorPos, log_entry *le) {
     uint64_t start_time = time_us_64();
@@ -70,11 +70,12 @@ void dispensepills(motor_pos *motorPos, log_entry *le) {
         motorPos->recaliberate = false;
         isStopedRun(motorPos);
     }
-    static pillDispenseState pillDispenseState = startDispense;
+    loraMsg("Pill dispense start");
+    pillDispenseState pillDispenseState = startDispense;
     while (motorPos->currentPillnum < 8){
         switch (pillDispenseState) {
             case startDispense:
-                runDispenser(motorPos, le);
+                runDispenser(motorPos);
                 start_time = time_us_64();
                 while (time_us_64()-start_time < 100000){
                 }
@@ -89,25 +90,8 @@ void dispensepills(motor_pos *motorPos, log_entry *le) {
                 }
                 break;
             case continueDispense:
-                /*
-                if (time_us_64()-start_time >= DispenTime){
-                    pillDroped = false;
-                    while (motorPos->currentPillnum < 8){
-                        runDispenser(motorPos, le);
-                        start_time = time_us_64();
-                        while (time_us_64()-start_time < 100000){
-                        }
-                        motorPos->currentPillnum++;
-                        if(pillDroped && motorPos->currentPillnum < 8){
-                            pillDispenseState = pillDispensed;
-                        }else{
-                            pillDispenseState = pillNotDispensed;
-                        }
-                    }
-                }
-                 */
                 if(time_us_64() - start_time >= DispenTime){
-                    runDispenser(motorPos, le);
+                    runDispenser(motorPos);
                     start_time = time_us_64();
                     while (time_us_64()-start_time < 100000){
                     }
@@ -125,44 +109,39 @@ void dispensepills(motor_pos *motorPos, log_entry *le) {
             case pillDispensed:
                 pillDroped = false;
                 if(motorPos->currentPillnum < 8){
-                    sprintf(le->message, "Pill dispensed %d, Pills left on dispenser %d", motorPos->currentPillnum, 7-motorPos->currentPillnum);
+                    sprintf(le->message, "Log: Pill dispensed %d, Pills left on dispenser %d", motorPos->currentPillnum, 7-motorPos->currentPillnum);
                     write_log(le, &motorPos->address);
-                    printf("Pill dispensed %d, Pills left on dispenser %d\n", motorPos->currentPillnum, 7-motorPos->currentPillnum);
+                    loraMsg(le->message);
                 }
-                //printf("Pill dispensed %d\n", motorPos->currentPillnum);
                 pillDispenseState = continueDispense;
                 break;
             case pillNotDispensed:
-                if(motorPos->currentPillnum < 8){
-                    sprintf(le->message, "Pill Not dispensed %d, Pills left on dispenser %d", motorPos->currentPillnum, 7-motorPos->currentPillnum);
-                    write_log(le, &motorPos->address);
-                    printf("Pill Not dispensed %d, Pills left on dispenser %d \n", motorPos->currentPillnum, 7-motorPos->currentPillnum);
-                }
-                //printf("Pill not dispensed %d\n", motorPos->currentPillnum);
-                ledToggleCount = 0;
                 while (ledToggleCount < 10 ){
-                    if(time_us_64() - lastToggleTime >= TOGGLE_DELAY){
+                    if(time_us_64() - lastToggleTime >= TOGGLE_DELAY2){
                         gpio_put(LED_1, !gpio_get(LED_1));
                         lastToggleTime = time_us_64();
                         ledToggleCount++;
                     }
                 }
+                ledToggleCount = 0;
+                if(motorPos->currentPillnum < 8){
+                    sprintf(le->message, "Log: Pill Not dispensed %d, Pills left on dispenser %d", motorPos->currentPillnum, 7-motorPos->currentPillnum);
+                    write_log(le, &motorPos->address);
+                    loraMsg(le->message);
+                }
                 pillDispenseState = continueDispense;
-                break;
-            case errorFound:
                 break;
         }
 
     }
     motorPos->revol = 0;
-    printf("Dispensing complete\n");
+    loraMsg("Pill dispenser empty");
     read_log();
 }
 
 void piezoHandler(uint gpio, uint32_t events){
-    while(/*time_us_64() - pilstart < 85600 &&*/ !pillDroped){
+    while(!pillDroped){
         if(gpio_get(gpio) == 0){
-            printf("Pill dispensed\n");
             pillDroped = true;
             break;
         }

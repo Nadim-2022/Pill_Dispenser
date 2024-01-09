@@ -41,10 +41,8 @@ void eeprom_read_bytes(uint16_t addr, uint8_t* values, uint16_t length) {
 void write_log(log_entry *le, uint16_t *address){
     uint8_t data[LOG_ENTRY_SIZE]; // 64 bytes
     size_t le_size = strlen(le->message);
-    for(int i = 0; i < le_size; i++){
-        data[i] = le->message[i];
-    }
     if(le_size > 0 && le_size < 62) {
+        memcpy(data, le->message, le_size);
         data[le_size] = '\0';
         uint16_t crc = crc16(data, 62);
         data[le_size + 1] = (uint8_t)(crc >> 8);

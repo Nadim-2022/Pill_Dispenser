@@ -4,6 +4,7 @@
 
 #include "pico/stdlib.h"
 #include "header.h"
+#include "uart.h"
 
 
 void init(){
@@ -46,6 +47,22 @@ void init(){
     i2c_init(i2c0, 100000);
     gpio_set_function(I2C0_SDA_PIN, GPIO_FUNC_I2C);
     gpio_set_function(I2C0_SCL_PIN, GPIO_FUNC_I2C);
+    uart_setup(UART_NR, UART_TX_PIN, UART_RX_PIN, BAUD_RATE);
+}
+void init_motor_pos(motor_pos *motorPos) {
+    motorPos->pos = 0;
+    motorPos->revol = 0;
+    motorPos->microstep = 0;
+    motorPos->currentPillnum = 0;// 0 = no pill, 1 = pill
+    motorPos->address = 0;
+    motorPos->recaliberate = false;
+}
 
+void set_boot_state(boot_state *boot_state, bool state){
+    boot_state->state = state;
+    boot_state->not_state = !state;
 
+}
+bool get_boot_state(boot_state *boot_state){
+    return boot_state->state == !boot_state->not_state;
 }

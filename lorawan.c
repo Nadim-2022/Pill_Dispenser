@@ -1,7 +1,5 @@
-//
-// Created by iamna on 08/01/2024.
-//
 #include "header.h"
+#include "watchdog.h"
 
 typedef enum{
     at,
@@ -26,27 +24,24 @@ bool lora(){
             uart_send(UART_NR, command0);
             sleep_ms(500);
             uint32_t t = time_us_32();
-            pos  = uart_read(UART_NR, (uint8_t *)str, STRLEN);
-
-            printf("Version: %s\n", str);
-            if(pos > 0){
+            pos = uart_read(UART_NR, (uint8_t *) str, STRLEN);
+            if (pos > 0) {
                 str[pos] = '\0';
-                if(strstr(str, "OK") != NULL){
+                if (strstr(str, "OK") != NULL) {
                     loarsState = lwotaa;
                 }
             }
          case lwotaa:
-            printf("Lwotaa\n");
             uart_send(UART_NR, command1);
-            sleep_ms(1000);
+            sleep_ms(500);
              t = time_us_32();
              pos  = uart_read(UART_NR, (uint8_t *)str, STRLEN);
-            printf("Lwotaa: %s\n", str);
             if(pos > 0){
                 str[pos] = '\0';
                 if(strstr(str, "+MODE: LWOTAA") != NULL){
                     loarsState = appkey;
                 }
+
             }
         case appkey:
             uart_send(UART_NR, command2);
@@ -60,11 +55,9 @@ bool lora(){
                 }
 
             }
-            printf("Appkey: %s\n", str);
         case class:
             uart_send(UART_NR, command3);
             sleep_ms(500);
-            t = time_us_32();
             pos  = uart_read(UART_NR, (uint8_t *)str, STRLEN);
             if(pos > 0){
                 str[pos] = '\0';
@@ -73,7 +66,6 @@ bool lora(){
                 }
 
             }
-            printf("Class: %s\n", str);
         case port:
             uart_send(UART_NR, command4);
             sleep_ms(500);
@@ -85,7 +77,6 @@ bool lora(){
                 }
 
             }
-            printf("Port: %s\n", str);
         case join:
             uart_send(UART_NR, command5);
             sleep_ms(10000);
@@ -93,8 +84,6 @@ bool lora(){
             if(pos > 0){
                 str[pos] = '\0';
                 if(strstr(str, "+JOIN: Network joined") != NULL){
-                    printf("Join: %s\n", str);
-                    printf("Network joined\n");
                     return true;
                 } else{
                     return false;
@@ -109,13 +98,12 @@ bool loraMsg(const char *message){
     strcpy(preMsg,"AT+MSG=\"");
     strcat(preMsg, message);
     strcat(preMsg, "\"\r\n");
-    printf("%s",preMsg);
-
     char str[STRLEN];
     int pos = 0;
     uart_send(UART_NR, preMsg);
     sleep_ms(5000);
     pos  = uart_read(UART_NR, (uint8_t *)str, STRLEN);
+    watchdog_feed();
     if(pos){
         str[pos] = '\0';
         if(strstr(str, "+MSG: Done") != NULL){
