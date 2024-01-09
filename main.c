@@ -33,16 +33,17 @@ int main() {
     init();
     motor_pos motorPos;
     log_entry le;
-    init_motor_pos(&motorPos);
+    //init_motor_pos(&motorPos);
     pil_state pilState = {.state = DisStart};
-    //boot_state bootState = {.state = true};
     boot_state bootState;
-    //eeprom_write_bytes(EEPROM_SIZE-1, (uint8_t*)&bootState, sizeof(boot_state));
-    //printf("Boot state: %d\n", bootState.state);
+    bool loraConn = false;
+    /*
+    while(!loraConn){
+        loraConn = lora();
+    }
+    loraMsg("Boot");
+    */
     eeprom_read_bytes(EEPROM_SIZE-1, (uint8_t*)&bootState, sizeof(boot_state));
-    printf("Boot state: %d\n", bootState.state);
-
-    //eeprom_write_bytes(EEPROM_motorPos-5, (uint8_t*)&motorPos, sizeof(motor_pos));
     if(!get_boot_state(&bootState)){
         printf("Boot state: %d\n", bootState.state);
         set_boot_state(&bootState, true);
@@ -51,11 +52,7 @@ int main() {
     read_log();
     erase_log(0);
     eeprom_read_bytes(EEPROM_motorPos-5, (uint8_t*)&motorPos, sizeof(motor_pos));
-    printf("pos: %d\n", motorPos.pos);
-    printf("revol: %d\n", motorPos.revol);
-    printf("microstep: %d\n", motorPos.microstep);
-    printf("currentPillnum: %d\n", motorPos.currentPillnum);
-    printf("address: %d\n", motorPos.address);
+    //init_motor_pos(&motorPos);
     if(motorPos.currentPillnum == 7){
         motorPos.currentPillnum = 0;
         printf("currentPillnum: %d\n", motorPos.currentPillnum);
@@ -79,10 +76,8 @@ int main() {
                 if (!gpio_get(BTN_1)) {
                     motorPos.revol = 0;
                     motorPos.currentPillnum = 0;
-                    printf("Current revolution %d\n", motorPos.revol);
                     ledToggle = false;
                     gpio_put(LED_1, 0);
-                    printf("Button 1 pressed\n");
                     sleep_ms(100);
                     pilState.state = DisCalib;
                 }
@@ -98,7 +93,6 @@ int main() {
             case DisRun:
                 if(!gpio_get(BTN_2)){
                     motorPos.currentPillnum = 0;
-                    printf("Button 2 pressed\n");
                     gpio_put(LED_1, 0);
                     dispensepills(&motorPos, &le);
                     calibration = false;
