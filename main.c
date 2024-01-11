@@ -4,7 +4,7 @@ bool lora_connected = false;
 
 
 // Dispense functions with piezo handler
-static bool pill_dropped = false;
+bool pill_dropped = false;
 
 void my_interrupt_handler_piezo(uint gpio, uint32_t events) // remake all this leave onluy pill_dropped = true;
 {
@@ -125,12 +125,14 @@ int main()
     boot_state bootState;
 
     // Connecting to Lora
-    
-    // UNCOMMENT THIS NOT TO SKIP LORA CONNECTION !
+    // UNCOMMENT THE FOLLOWING NOT TO SKIP LORA CONNECTION !
+
     // while (!lora_connected) // Infinite attempts to connect
     // {
     //     lora_connected = lora();
     // }
+
+    // maybe add press 3rd button to connect to lora
 
     // Boot message
     if (watchdog_caused_reboot())
@@ -145,7 +147,7 @@ int main()
     // Enabling Watchdog
     watchdog_enable(MY_WATCHDOG_TIMEOUT, true);
 
-    // Reading EEPROM memory
+    // Reading EEPROM
     eeprom_read_bytes(EEPROM_SIZE - 1, (uint8_t *)&bootState, sizeof(boot_state));
     if (!get_boot_state(&bootState))
     {
@@ -218,7 +220,9 @@ int main()
         case STATE_DISPENSING:
             watchdog_update();
             gpio_put(LED_1, 0);
-            dispensepills(&motorPos, &my_log_entry);
+            // dispensepills(&motorPos, &my_log_entry);
+
+
             ledToggle = true;
             program_state = STATE_CALIB_NO;
             break;
@@ -227,7 +231,6 @@ int main()
             lora_message("Power off during pill dispense, realigning. Then continue to dispense.", lora_connected);
             watchdog_update();
             recalib(&motorPos);
-            dispensepills(&motorPos, &my_log_entry);
             program_state = STATE_DISPENSING;
         default:
             program_state = STATE_CALIB_NO;

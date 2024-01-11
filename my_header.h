@@ -161,4 +161,4 @@ bool lora_message(const char *message, bool lora_connected);
 void run(motor_pos *motorPos, int start, bool startCount, bool clockwiseDirection);
 void calib(motor_pos *motorPos);
 void recalib(motor_pos *motorPos);
-void dispensepills(motor_pos *motorPos, log_entry *le);
+
