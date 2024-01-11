@@ -1,6 +1,7 @@
 //
 // Created by iamna on 20/12/2023.
 //
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -86,7 +87,6 @@ void read_log(){
 void erase_log(uint16_t address){
     //To erase all the log entries, write 0x00 to the all the byte of each log entry.
     uint8_t data[LOG_ENTRY_SIZE] = {0};
-    uint8_t read_data[LOG_ENTRY_SIZE];
     while (address < LOG_ENTRY_ADD_MAX){
         eeprom_write_bytes(address, data, LOG_ENTRY_SIZE);
         address += LOG_ENTRY_SIZE;
