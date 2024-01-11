@@ -1,14 +1,5 @@
-//
-// Created by iamna on 20/12/2023.
-//
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include "pico/stdlib.h"
-#include "hardware/i2c.h"
 #include "header.h"
-#include "watchdog.h"
+
 
 
 static bool pillDroped = false;
@@ -38,7 +29,7 @@ void runDispenser(motor_pos *motorPos){
         }
 
     }
-    watchdog_feed();
+    watchdog_update();
 }
 void isStopedRun(motor_pos *motorPos){
     int have_to = motorPos->microstep * motorPos->currentPillnum;
@@ -60,7 +51,7 @@ void isStopedRun(motor_pos *motorPos){
             }
         }
     }
-    watchdog_feed();
+    watchdog_update();
 }
 void dispensepills(motor_pos *motorPos, log_entry *le) {
     uint64_t start_time = time_us_64();

@@ -1,12 +1,4 @@
-//
-// Created by iamna on 20/12/2023.
-//
-
-#include "pico/stdlib.h"
 #include "header.h"
-#include "uart.h"
-
-
 void init(){
     // Stepper GPIO
     gpio_init(STPER_GP2);

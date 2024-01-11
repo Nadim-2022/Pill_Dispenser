@@ -1,9 +1,5 @@
-
-#include <stdio.h>
-#include "pico/stdlib.h"
-#include "hardware/i2c.h"
 #include "header.h"
-#include "watchdog.h"
+
 // Run the motor
 void run(motor_pos *motorPos, int start, bool startCount, bool clockwiseDirection) {
     int stepIncrement = clockwiseDirection ? 1 : -1;
@@ -31,58 +27,8 @@ void run(motor_pos *motorPos, int start, bool startCount, bool clockwiseDirectio
             }
         }
     }
-    watchdog_feed();
+    watchdog_update();
 }
-/*
-typedef struct {
-    int extra;
-    int oneStep;
-}extraAlignState;
-
-void countExtraAlign(motor_pos *motorPos,bool clockwiseDirection, extraAlignState *alignState){
-    printf("%d\n", clockwiseDirection);
-    int stepIncrement = clockwiseDirection ? 1 : -1;
-    while (alignState->oneStep < motorPos->microstep || alignState->extra >= 0) {
-        for (int i = motorPos->pos; i < 8 && i >= 0; i+= stepIncrement) {
-            gpio_put(STPER_GP2, clockwise[i][0]);
-            gpio_put(STPER_GP3, clockwise[i][1]);
-            gpio_put(STPER_GP6, clockwise[i][2]);
-            gpio_put(STPER_GP13, clockwise[i][3]);
-            sleep_ms(MOTOR_DELAY);
-            motorPos->pos += stepIncrement;
-            if(clockwiseDirection){
-                if(gpio_get(GPIO_Opto) == 0){
-                    alignState->extra++;
-                }
-                alignState->oneStep++;
-            }else{
-                printf("Decrease\n");
-                alignState->oneStep=0;
-                alignState->extra--;
-                printf("extra: %d\n", alignState->extra);
-            }
-            if (motorPos->pos == 8) {
-                motorPos->pos = 0;
-            } else if (motorPos->pos < 0) {
-                motorPos->pos = 7;
-            }
-            if (alignState->oneStep == motorPos->microstep) {
-                printf("extra: %d\n", alignState->extra);
-                break;
-            }
-            if(alignState->extra == 0){
-                printf("Break\n");
-                break;
-            }
-            printf("oneStep: %d, microstep: %d\n", alignState->oneStep, motorPos->microstep);
-        }
-        if (alignState->oneStep == motorPos->microstep) {
-            printf("extra: %d\n", alignState->extra);
-            break;
-        }
-    }
-}
- */
 
 // Calibrate the motor
 void calib(motor_pos *motorPos){
@@ -119,7 +65,7 @@ void calib(motor_pos *motorPos){
             }
         }
     }
-    watchdog_feed();
+    watchdog_update();
     while (extra!=0){
         for (int i = motorPos->pos; i >= 0; i--) {
             gpio_put(STPER_GP2, clockwise[i][0]);
@@ -137,7 +83,7 @@ void calib(motor_pos *motorPos){
             }
         }
     }
-    watchdog_feed();
+    watchdog_update();
 
 }
 
@@ -169,7 +115,7 @@ void recalib(motor_pos *motorPos){
             }
         }
     }
-    watchdog_feed();
+    watchdog_update();
     printf("extra: %d\n", extra);
     sleep_ms(1000);
     while(extra != 0){
@@ -192,5 +138,5 @@ void recalib(motor_pos *motorPos){
     }
     motorPos->recaliberate = true;
     sleep_ms(500);
-    watchdog_feed();
+    watchdog_update();
 }

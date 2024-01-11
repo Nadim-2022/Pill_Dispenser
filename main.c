@@ -1,10 +1,4 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include "pico/stdlib.h"
-#include "hardware/i2c.h"
 #include "header.h"
-#include "watchdog.h"
 
 int main()
 {
@@ -12,7 +6,6 @@ int main()
     init();
     motor_pos motorPos;
     log_entry le;
-    // init_motor_pos(&motorPos);
     pil_state pilState = {.state = DisStart};
     boot_state bootState;
     bool loraConn = false;
@@ -29,7 +22,7 @@ int main()
     {
         loraMsg("Log: Boot");
     }
-    watchdog_init(8300);
+    watchdog_enable(MY_WATCHDOG_TIMEOUT, true);
 
     eeprom_read_bytes(EEPROM_SIZE - 1, (uint8_t *)&bootState, sizeof(boot_state));
     if (!get_boot_state(&bootState))
@@ -57,7 +50,7 @@ int main()
         switch (pilState.state)
         {
         case DisStart:
-            watchdog_feed();
+            watchdog_update();
             if (ledToggle && (time_us_32() - lastToggleTime >= TOGGLE_DELAY))
             {
                 gpio_put(LED_1, !gpio_get(LED_1));
@@ -80,7 +73,7 @@ int main()
             loraMsg("Calib done");
             break;
         case DisRun:
-            watchdog_feed();
+            watchdog_update();
             if (!gpio_get(BTN_2))
             {
                 motorPos.currentPillnum = 0;
@@ -92,7 +85,7 @@ int main()
             break;
         case DisreCalib:
             loraMsg("Power off during pill dispense, recalibrating");
-            watchdog_feed();
+            watchdog_update();
             recalib(&motorPos);
             dispensepills(&motorPos, &le);
             pilState.state = DisStart;

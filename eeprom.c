@@ -1,12 +1,3 @@
-//
-// Created by iamna on 20/12/2023.
-//
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include "pico/stdlib.h"
-#include "hardware/i2c.h"
 #include "header.h"
 
 uint16_t crc16(const uint8_t *data_p, size_t length) {
@@ -67,7 +58,6 @@ void write_log(log_entry *le, uint16_t *address){
 
 }
 void read_log(){
-    uint8_t data[LOG_ENTRY_SIZE];
     uint16_t addr = 0;
     uint8_t read_data[LOG_ENTRY_SIZE];
     printf("LOG:\n");
